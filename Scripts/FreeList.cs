@@ -16,13 +16,13 @@ using System;
 /// <typeparam name="T"></typeparam>
 public class FreeList<T>
 {
-    public class ListNode<T>
+    public class ListNode<U>
     {
         public int index;
-        public T data;
+        public U data;
         public bool isFree;
 
-        public ListNode(int index, T value)
+        public ListNode(int index, U value)
         {
             this.index = index;
             this.data = value;
