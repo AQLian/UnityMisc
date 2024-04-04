@@ -48,13 +48,17 @@ public class SimplePool<T> where T : new()
 
     public int ActiveCount { get { return AllCount - m_PoolItems.Count; } }
 
+    public int MaxInActiveCount { get; }
+
     private Action<T> m_ActionOnGet;
     private Action<T> m_ActionOnRelease;
 
-    public SimplePool(Action<T> actionOnGet, Action<T> actionOnRelease)
+
+    public SimplePool(Action<T> actionOnGet, Action<T> actionOnRelease, int maxPoolItemCount = -1)
     {
         m_ActionOnGet = actionOnGet;
         m_ActionOnRelease = actionOnRelease;
+        MaxInActiveCount = maxPoolItemCount;
     }
 
     public T Get()
@@ -93,18 +97,6 @@ public class SimplePool<T> where T : new()
 
         AllCount++;
         item = new T();
-        if (item is UnityEngine.GameObject go)
-        {
-            var detector = go.AddComponent<PoolGameObjectDestroyDetector>();
-            detector.onDestroyed += 
-            u => {
-                if (u is T t)
-                {
-                    AllCount--;
-                    RemovePoolItem(t);
-                }
-            };
-        }
         m_ActionOnGet?.Invoke(item);
         return item;
     }
@@ -124,7 +116,10 @@ public class SimplePool<T> where T : new()
             {
                 m_ItemIndexMap[lastItem] = index;
             }
+
+            return true;
         }
+        return false;
     }
 
     public void Release(T item)
@@ -147,18 +142,14 @@ public class SimplePool<T> where T : new()
             return;
         }
 
+        if (m_PoolItems.Count >= MaxCount && MaxCount > 0)
+        {
+            RemovePoolItem(m_PoolItems[m_PoolItems.Count - 1]);
+            AllCount--;
+        }
+
         m_ActionOnRelease?.Invoke(item);
         m_PoolItems.Add(item);
         m_ItemIndexMap[item] = m_PoolItems.Count - 1;
-    }
-}
-
-public class PoolGameObjectDestroyDetector : MonoBehaviour
-{
-    public event Action<UnityEngine.GameObject> onDestroyed;
-
-    public void OnDestroy()
-    {
-        onDestroyed?.Invoke(gameObject);
     }
 }
