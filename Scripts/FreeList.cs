@@ -123,6 +123,8 @@ public class FreeList<T>
         return false;
     }
 
+    // this will just remove than handle point to data to reusing pool,
+    // real data inside node is not removed, if need remove data, call Destroy
     public bool TryRelease(int index, out T data)
     {
         data = default;
