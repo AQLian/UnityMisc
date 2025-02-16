@@ -17,6 +17,13 @@ namespace IFix.Core
             using (FileStream fs = File.OpenRead(filePath))
             using (BinaryReader mainReader = new BinaryReader(fs))
             {
+                // 1. Verify Header
+                byte[] fileMagic = reader.ReadBytes(4);
+                if (!fileMagic.SequenceEqual(PatchCombiner.MAGIC))
+                {
+                    throw new InvalidDataException("Not a valid patch file (invalid magic)");
+                }
+
                 ushort numSubPatches = mainReader.ReadUInt16();
                 List<PatchHeaderEntry> subPatches = new List<PatchHeaderEntry>();
                 for (int i = 0; i < numSubPatches; i++)

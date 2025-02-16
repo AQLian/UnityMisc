@@ -18,7 +18,7 @@ namespace IFix.Core
         // [Data]
         // Concatenated patch files
 
-        private static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("PATC");
+        public static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("PATC");
         private const ushort VERSION = 1;
 
         public static void Create(string[] patchFiles, string outputPath)
