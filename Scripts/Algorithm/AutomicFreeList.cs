@@ -17,7 +17,22 @@ namespace Unity.Networking.Transport.Utilities.LowLevel.UnsafeAtomicFreeListEnha
         private Allocator m_Allocator;
 
         public int Capacity => m_Length;
+
+        // todo! should make it thread safe also !
         public int InUse => m_Buffer[0] - m_Buffer[1];
+
+        public unsafe int InUseThreadSafe
+        {
+            get
+            {
+                long combined = Interlocked.Read(ref *(long*)m_Buffer);
+                int allocated;
+                int free;
+                UnsafeUtility.MemCpy(&allocated, &combined, 4);              // Copy first 4 bytes (m_Buffer[0]).
+                UnsafeUtility.MemCpy(&free, (byte*)&combined + 4, 4);        // Copy next 4 bytes (m_Buffer[1]).
+                return allocated - free;
+            }
+        }
 
         public bool IsCreated => m_Buffer != null;
 
@@ -33,8 +48,10 @@ namespace Unity.Networking.Transport.Utilities.LowLevel.UnsafeAtomicFreeListEnha
             m_Allocator = allocator;
             m_Length = capacity;
             m_BufferSize = UnsafeUtility.SizeOf<int>() * (capacity + 2);
-            m_InUseFreeFlag = (int*)UnsafeUtility.Malloc(capacity * UnsafeUtility.SizeOf<int>(), UnsafeUtility.AlignOf<int>(), allocator);
-            m_Buffer = (int*)UnsafeUtility.Malloc(m_BufferSize, UnsafeUtility.AlignOf<int>(), allocator);
+            m_InUseFreeFlag = (int*)UnsafeUtility.Malloc(capacity * UnsafeUtility.SizeOf<int>(),
+             UnsafeUtility.AlignOf<long>(), allocator);
+            m_Buffer = (int*)UnsafeUtility.Malloc(m_BufferSize, 
+            UnsafeUtility.AlignOf<long>(), allocator);
             UnsafeUtility.MemClear(m_Buffer, m_BufferSize);
         }
 
