@@ -3,7 +3,7 @@ using System.Threading;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace Unity.Networking.Transport.Utilities.LowLevel.UnsafeAtomicFreeListEnhanced
+namespace UnsafeAtomicFreeListEnhanced
 {
     internal unsafe struct UnsafeAtomicFreeList : IDisposable
     {
@@ -89,7 +89,7 @@ namespace Unity.Networking.Transport.Utilities.LowLevel.UnsafeAtomicFreeListEnha
         /// <returns>true for push success </returns>
         public unsafe bool TryPush(int item){
             if (Interlocked.CompareExchange(ref m_InUseFreeFlag[item], 0, 1) == 1){
-                Push(item);
+                PushUnsafe(item);
                 return true;
             }
 
