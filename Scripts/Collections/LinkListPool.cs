@@ -5,8 +5,8 @@ public interface IPoolListNode<T> where T : class
 
 public class LinkListPool<T> where T : class, IPoolListNode<T>, new()
 {
-    private static T _sential = new();
-    private T _top = _sential;
+    private static T _sentinel = new();
+    private T _top = _sentinel;
 
     public int CountAll { get; private set; }
     public int InactiveCount { get; private set; }
@@ -14,7 +14,7 @@ public class LinkListPool<T> where T : class, IPoolListNode<T>, new()
     
     public T Acquire()
     {
-        if (_top == _sential)
+        if (_top == _sentinel)
         {
             CountAll++;
             return new T();
@@ -24,7 +24,7 @@ public class LinkListPool<T> where T : class, IPoolListNode<T>, new()
         _top = _top.NextNode;
         if (_top == null)
         {
-            _top = _sential;
+            _top = _sentinel;
         }
         ref var nextItem = ref item.NextNode;
         nextItem = null;
