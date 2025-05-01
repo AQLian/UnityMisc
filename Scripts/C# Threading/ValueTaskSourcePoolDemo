@@ -1,0 +1,120 @@
+
+public class PooledValueTaskSource<T> : IValueTaskSource<T>
+{
+    private static readonly ObjectPool<PooledValueTaskSource<T>> Pool = new ObjectPool<PooledValueTaskSource<T>>(
+        () => new PooledValueTaskSource<T>(),
+        100 // Max pool size
+    );
+
+    private ManualResetValueTaskSourceCore<T> _core;
+    private bool _isPooled;
+    public bool IsPooled => _isPooled;
+
+    private PooledValueTaskSource()
+    {
+        _core = new ManualResetValueTaskSourceCore<T>();
+        _isPooled = false;
+    }
+
+    public static PooledValueTaskSource<T> GetFromPool()
+    {
+        var source = Pool.Get();
+        source._isPooled = false;
+        source._core.Reset();
+        return source;
+    }
+
+    public void SetResult(T result)
+    {
+        _core.SetResult(result);
+        ReturnToPool();
+    }
+
+    public short GetVersion()
+    {
+        return _core.Version;
+    }
+
+    public void SetException(Exception error)
+    {
+        _core.SetException(error);
+        ReturnToPool();
+    }
+
+    private void ReturnToPool()
+    {
+        if (!_isPooled)
+        {
+            _isPooled = true;
+            Pool.Return(this);
+        }
+    }
+
+    public ValueTaskAwaiter<T> GetAwaiter()
+    {
+        return AsValueTask().GetAwaiter();
+    }
+    
+    public ValueTask<T> AsValueTask()
+    {
+        return new ValueTask<T>(this, _core.Version);
+    }
+
+    public T GetResult(short token)
+    {
+        return _core.GetResult(token);
+    }
+
+    public ValueTaskSourceStatus GetStatus(short token)
+    {
+        return _core.GetStatus(token);
+    }
+
+    public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
+    {
+        _core.OnCompleted(continuation, state, token, flags);
+    }
+    
+    
+    public class ObjectPool<T> where T : class
+    {
+        private readonly T[] _items;
+        private readonly Func<T> _factory;
+        private int _currentIndex;
+        private readonly int _maxSize;
+
+        public ObjectPool(Func<T> factory, int maxSize)
+        {
+            _factory = factory;
+            _maxSize = maxSize;
+            _items = new T[maxSize];
+            _currentIndex = -1;
+        }
+
+        public T Get()
+        {
+            lock (_items)
+            {
+                if (_currentIndex >= 0)
+                {
+                    var item = _items[_currentIndex];
+                    _items[_currentIndex--] = null;
+                    return item;
+                }
+            }
+            return _factory();
+        }
+
+        public void Return(T item)
+        {
+            lock (_items)
+            {
+                if (_currentIndex < _maxSize - 1)
+                {
+                    _currentIndex++;
+                    _items[_currentIndex] = item;
+                }
+            }
+        }
+    }
+}
