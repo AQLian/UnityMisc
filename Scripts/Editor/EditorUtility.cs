@@ -56,5 +56,23 @@ namespace Scripts.Editor
 
             return null;
         }
+
+        public bool IsSubPath(string parentPath, string[] subPaths) 
+        {
+            foreach (string path in subPaths) 
+            {
+                if (path == parentPath) 
+                    return true; 
+
+                if (parentPath.StartsWith(path) && 
+                    parentPath.Length > path.Length && 
+                    parentPath[path.Length] == '/') 
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
     }
 }
