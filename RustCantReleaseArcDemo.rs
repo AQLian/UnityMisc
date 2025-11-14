@@ -26,6 +26,9 @@ impl Drop for ItemB {
 }
 
 fn main() {
+
+
+    
     let mut item_a = Arc::new(ItemA {
         name: "Item A".to_string(),
         item_b: None,

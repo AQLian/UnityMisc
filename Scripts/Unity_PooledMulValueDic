@@ -1,0 +1,71 @@
+/// <summary>
+/// using UnityEngine.Pool to build a support multi-value dictionary,
+/// must using Dispose to release the pooled collections after use.
+/// </summary>
+/// <typeparam name="Key"></typeparam>
+/// <typeparam name="Value"></typeparam> <summary>
+/// 
+/// </summary>
+/// <typeparam name="Key"></typeparam>
+/// <typeparam name="Value"></typeparam>
+public class PooledMulValueDic<Key, Value> : IDisposable, IEnumerable<KeyValuePair<Key, List<Value>>>
+{
+    private Dictionary<Key, List<Value>> m_dic;
+    private bool m_disposed;
+    private List<List<Value>> m_pooledList = ListPool<List<Value>>.Get();
+
+    public int Count => m_dic.Count;
+
+    public PooledMulValueDic()
+    {
+        m_dic = DictionaryPool<Key, List<Value>>.Get();
+    }
+
+    public Dictionary<Key, List<Value>> Get => m_dic;
+
+    public bool TryGet(Key key, out List<Value> result)
+    {
+        return m_dic.TryGetValue(key, out result);
+    }
+
+    public void Add(Key key, Value value)
+    {
+        if (!TryGet(key, out var result))
+        {
+            result = ListPool<Value>.Get();
+            m_pooledList.Add(result);
+            m_dic.Add(key, result);
+        }
+
+        result.Add(value);
+    }
+
+    public void Dispose()
+    {
+        if (m_disposed)
+        {
+            return;
+        }
+
+        m_disposed = true;
+        if (m_dic != null)
+        {
+            foreach (var eachList in m_pooledList)
+            {
+                ListPool<Value>.Release(eachList);
+            }
+            ListPool<List<Value>>.Release(m_pooledList);
+            DictionaryPool<Key, List<Value>>.Release(m_dic);
+        }
+    }
+
+    public IEnumerator<KeyValuePair<Key, List<Value>>> GetEnumerator()
+    {
+        return m_dic.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+}
