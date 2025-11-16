@@ -48,14 +48,19 @@ public class PooledMulValueDic<Key, Value> : IDisposable, IEnumerable<KeyValuePa
         }
 
         m_disposed = true;
-        if (m_dic != null)
+        if (m_pooledList != null)
         {
             foreach (var eachList in m_pooledList)
             {
                 ListPool<Value>.Release(eachList);
             }
             ListPool<List<Value>>.Release(m_pooledList);
+            m_pooledList = null;
+        }
+        if (m_dic != null)
+        {
             DictionaryPool<Key, List<Value>>.Release(m_dic);
+            m_dic = null;
         }
     }
 
