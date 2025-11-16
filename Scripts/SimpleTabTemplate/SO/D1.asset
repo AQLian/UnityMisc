@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 258184b4d7b49fa4eaec994b2b2bc88b, type: 3}
+  m_Name: D1
+  m_EditorClassIdentifier: 
+  tabs:
+  - tabName: hello1
+    detailPrefab: {fileID: 5625052086770976401, guid: 8ca00dc85b419e544ad19c3605a6f8de, type: 3}
+  - tabName: xxxx2
+    detailPrefab: {fileID: 8098639129522541260, guid: 4f52e4b71228bac4c8e5034e6da543a8, type: 3}
+  - tabName: xxxx24343
+    detailPrefab: {fileID: 8098639129522541260, guid: 862a36ba09900ee46aa09034c18172ce, type: 3}
+  tabButtonPrefab: {fileID: 7062025738760757938, guid: df10fb8244ec4464691d6f9766b5826f, type: 3}
