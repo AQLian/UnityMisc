@@ -40,7 +40,6 @@ public class FixedNarrowRangeSliding : MonoBehaviour
 
     void UpdateColors()
     {
-        tmpText.ForceMeshUpdate();
         var textInfo = tmpText.textInfo;
 
         var visibleCount = CountVisibleCharacters(textInfo);
@@ -59,8 +58,10 @@ public class FixedNarrowRangeSliding : MonoBehaviour
         var maxOffset = 1f - totalWidth;
         var slideSpeed = 1f / slideTime;
         var clampedOffset = maxOffset>0? Mathf.PingPong(Time.time * slideSpeed, maxOffset) : 0;
-
-        CalculateObservationCenters(visibleCount, totalWidth);
+        for (int i = 0; i < visibleCount; i++)
+        {
+            observationCenters[i] = (i + 0.5f) * adjustedObservationWidth;
+        }
 
         var charIndex = 0;
         for (var i = 0; i < textInfo.characterCount; i++)
@@ -87,15 +88,6 @@ public class FixedNarrowRangeSliding : MonoBehaviour
         }
 
         tmpText.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
-    }
-
-
-    void CalculateObservationCenters(int visibleCount, float totalWidth)
-    {
-        for (int i = 0; i < visibleCount; i++)
-        {
-            observationCenters[i] = (i + 0.5f) * adjustedObservationWidth;
-        }
     }
 
     int CountVisibleCharacters(TMP_TextInfo textInfo)
