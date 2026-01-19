@@ -1,3 +1,4 @@
+using EasyTextEffects;
 using System.Collections.Generic;
 using TMPro;
 using Unity.Collections;
@@ -11,7 +12,7 @@ public class FixedNarrowRangeSliding : MonoBehaviour
     [Header("滑动时间")]
     public float slideTime = 2f;
 
-    [Range(0.05f, 0.3f)]
+    [Range(0.02f, 0.3f)]
     public float observationWidth = 0.15f; 
     [Range(0f,1f)]
     public float allTextMaxWidth = .5f;
@@ -19,10 +20,23 @@ public class FixedNarrowRangeSliding : MonoBehaviour
 
     private TextMeshProUGUI tmpText;
     public float adjustedObservationWidth;
-    public float time;
 
+
+    [Space(5)][Range(1, 120)] public int updatesPerSecond = 30;
+    
+    private float nextUpdateTime_ = 0;
+
+    public float time { get; set; }
+    
     private List<float> observationCenters;
+    
     private int _lastVisible=-1;
+
+    public float now;
+
+    public bool nextFrameArrived = false;
+
+    public AnimationCurve curve;
 
     void Start()
     {
@@ -32,8 +46,13 @@ public class FixedNarrowRangeSliding : MonoBehaviour
 
     void Update()
     {
+        now = Time.time;
+
         time = Time.time;
 
+        if (time < nextUpdateTime_)
+            return;
+        nextUpdateTime_ = time + 1f / updatesPerSecond*1.0f;
 
         UpdateColors();
     }
@@ -56,13 +75,25 @@ public class FixedNarrowRangeSliding : MonoBehaviour
 
         var totalWidth = visibleCount * adjustedObservationWidth;
         var maxOffset = 1f - totalWidth;
-        var slideSpeed = 1f / slideTime;
-        var clampedOffset = maxOffset>0? Mathf.PingPong(Time.time * slideSpeed, maxOffset) : 0;
+        var slideSpeed = maxOffset / slideTime;
+        var rawOffset = maxOffset > 0 ? Mathf.PingPong(Time.time * slideSpeed, maxOffset) : 0;
+        //apply curve
+        var clampedOffset = 0f;
+        if (maxOffset > 0 && curve != null)
+        {
+            var normalizedProgress = Mathf.Clamp01(rawOffset / maxOffset);
+            var remappedProgress = curve.Evaluate(normalizedProgress);
+            clampedOffset = remappedProgress * maxOffset;
+        }
+        else
+        {
+            clampedOffset = 0;
+        }
+
         for (int i = 0; i < visibleCount; i++)
         {
             observationCenters[i] = (i + 0.5f) * adjustedObservationWidth;
         }
-
         var charIndex = 0;
         for (var i = 0; i < textInfo.characterCount; i++)
         {
@@ -76,6 +107,20 @@ public class FixedNarrowRangeSliding : MonoBehaviour
             var leftColor = gradient.Evaluate(left);
             var rightColor = gradient.Evaluate(right);
 
+            if (charIndex == 0)
+            {
+                capList.Add(new CaptureList
+                {
+                    charIdx = charIndex,
+                    leftRatio = left,
+                    rightRatio = right,
+                    time = Time.time,
+                    delta = Time.deltaTime,
+                    smoothDelta =Time.smoothDeltaTime,
+                    frameCnt = Time.frameCount,
+                });
+            }
+
             var vertexIndex = charInfo.vertexIndex;
             for (var v = 0; v < 4; v++)
             {
@@ -88,6 +133,20 @@ public class FixedNarrowRangeSliding : MonoBehaviour
         }
 
         tmpText.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
+    }
+
+    public List<CaptureList> capList = new List<CaptureList>();
+
+    [System.Serializable]
+    public class CaptureList
+    {
+        public int charIdx;
+        public float leftRatio;
+        public float rightRatio;
+        public float time;
+        public float delta;
+        public float smoothDelta;
+        public int frameCnt;
     }
 
     int CountVisibleCharacters(TMP_TextInfo textInfo)
