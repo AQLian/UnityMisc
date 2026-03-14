@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class EnhanceScrollView : MonoBehaviour
+public class EnhanceScrollView : MonoBehaviour, IDragArenaEventListerner
 {
     // Control the item's scale curve
     public AnimationCurve scaleCurve;
@@ -39,40 +41,32 @@ public class EnhanceScrollView : MonoBehaviour
 
     // originHorizontalValue Lerp to horizontalTargetValue
     private float originHorizontalValue = 0.1f;
-    public float curHorizontalValue = 0.5f;
+    [SerializeField]
+    private float curHorizontalValue = 0.5f;
 
     // "depth" factor (2d widget depth or 3d Z value)
-    private int depthFactor = 5;
-
-    // Drag enhance scroll view
-    [Tooltip("Camera for drag ray cast")]
-    public Camera sourceCamera;
-
-    public void EnableDrag(bool isEnabled)
-    {
-    }
-
+    public int depthFactor = 5;
     // targets enhance item in scroll view
     public List<EnhanceItem> listEnhanceItems;
     // sort to get right index
     private List<EnhanceItem> listSortedItems = new List<EnhanceItem>();
 
-    private static EnhanceScrollView instance;
-    public static EnhanceScrollView GetInstance
-    {
-        get { return instance; }
-    }
+    public bool InitCenterlized = true;
 
-    void Awake()
-    {
-        instance = this;
-    }
+    private static EnhanceScrollView instance;
+    public static EnhanceScrollView GetInstance => instance;
+
+    void Awake() => instance = this;
+
+    public Transform maskArena;
+    public int viewCount = 3;
+
 
     void Start()
     {
         canChangeItem = true;
         int count = listEnhanceItems.Count;
-        dFactor = (Mathf.RoundToInt((1f / count) * 10000f)) * 0.0001f;
+        dFactor = 1f / count;
         mCenterIndex = count / 2;
         if (count % 2 == 0)
             mCenterIndex = count / 2 - 1;
@@ -83,10 +77,6 @@ public class EnhanceScrollView : MonoBehaviour
             listEnhanceItems[i].CenterOffSet = dFactor * (mCenterIndex - index);
             listEnhanceItems[i].SetSelectState(false);
             GameObject obj = listEnhanceItems[i].gameObject;
-
-            UDragEnhanceView script = obj.GetComponent<UDragEnhanceView>();
-            if (script != null)
-                script.SetScrollView(this);
             index++;
         }
 
@@ -97,17 +87,26 @@ public class EnhanceScrollView : MonoBehaviour
             startCenterIndex = mCenterIndex;
         }
 
+        // restrict view size
+        if (maskArena)
+        {
+            cellWidth = maskArena.GetComponent<RectTransform>().rect.width / viewCount;
+        }
+
         // sorted items
         listSortedItems = new List<EnhanceItem>(listEnhanceItems.ToArray());
         totalHorizontalWidth = cellWidth * count;
+        GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, totalHorizontalWidth);
+        if (InitCenterlized)
+        {
+            var local = transform.localPosition;
+            local.x -= totalHorizontalWidth * .5f;
+            transform.localPosition = local;
+        }
         curCenterItem = listEnhanceItems[startCenterIndex];
         curHorizontalValue = 0.5f - curCenterItem.CenterOffSet;
         LerpTweenToTarget(0f, curHorizontalValue, false);
-
-        // 
-        // enable the drag actions
-        // 
-        EnableDrag(true);
+        this.OnTweenOver();
     }
 
     private void LerpTweenToTarget(float originValue, float targetValue, bool needTween = false)
@@ -117,7 +116,6 @@ public class EnhanceScrollView : MonoBehaviour
             SortEnhanceItem();
             originHorizontalValue = targetValue;
             UpdateEnhanceScrollView(targetValue);
-            this.OnTweenOver();
         }
         else
         {
@@ -126,11 +124,6 @@ public class EnhanceScrollView : MonoBehaviour
             mCurrentDuration = 0.0f;
         }
         enableLerpTween = needTween;
-    }
-
-    public void DisableLerpTween()
-    {
-        this.enableLerpTween = false;
     }
 
     /// 
@@ -186,6 +179,7 @@ public class EnhanceScrollView : MonoBehaviour
         var factorCount = Mathf.Abs(newCenterItem.RealIndex) - Mathf.Abs(preCenterItem.RealIndex);
         return Mathf.Abs(factorCount);
     }
+
     // sort item with X so we can know how much distance we need to move the timeLine(curve time line)
     public int SortPosition(EnhanceItem a, EnhanceItem b) => a.transform.localPosition.x.CompareTo(b.transform.localPosition.x);
     
@@ -251,9 +245,10 @@ public class EnhanceScrollView : MonoBehaviour
         SetHorizontalTargetItemIndex(listEnhanceItems[targetIndex]);
     }
 
-    public float factor = 0.001f;
+    public void OnBeginDrag(PointerEventData eventData) { }
+
     // On Drag Move
-    public void OnDragEnhanceViewMove(PointerEventData eventData)
+    public void OnDrag(PointerEventData eventData)
     {
         // In developing
         if (Mathf.Abs(eventData.delta.x) > 0.0f)
@@ -264,15 +259,11 @@ public class EnhanceScrollView : MonoBehaviour
     }
 
     // On Drag End
-    public void OnDragEnhanceViewEnd()
+    public void OnEndDrag(PointerEventData eventData)
     {
         // find closed item to be centered
         int closestIndex = 0;
-        float value = (curHorizontalValue - (int)curHorizontalValue);
         float min = float.MaxValue;
-        
-        
-        float tmp = 0.5f * (curHorizontalValue < 0 ? -1 : 1);
         var center = .5f * totalHorizontalWidth;
         for (int i = 0; i < listEnhanceItems.Count; i++)
         {
@@ -286,10 +277,32 @@ public class EnhanceScrollView : MonoBehaviour
         }
 
         originHorizontalValue = curHorizontalValue;
-        float target = curHorizontalValue - (listEnhanceItems[closestIndex].transform.localPosition.x/totalHorizontalWidth - .5f);
         preCenterItem = curCenterItem;
-        curCenterItem = listEnhanceItems[closestIndex];
-        LerpTweenToTarget(originHorizontalValue, target, true);
+        var closest = listEnhanceItems[closestIndex];
+        // just test , please change
+        if(eventData.delta.x > 0)
+        {
+            closest = listEnhanceItems[closestIndex - 1 < 0 ? listEnhanceItems.Count - 1 : closestIndex - 1];
+            curCenterItem = closest;
+            LerpTweenToTarget(originHorizontalValue, (float)Snap(originHorizontalValue, dFactor)+dFactor, true);
+        }
+        else if (eventData.delta.x < 0)
+        {
+            closest = listEnhanceItems[closestIndex + 1 > listEnhanceItems.Count - 1 ?  0 : closestIndex + 1];
+            curCenterItem = closest;
+            LerpTweenToTarget(originHorizontalValue, (float)Snap(originHorizontalValue, dFactor) - dFactor, true);
+        }
+        else
+        {
+            curCenterItem = closest;
+            LerpTweenToTarget(originHorizontalValue, (float)Snap(originHorizontalValue, dFactor), true);
+        }
+
         canChangeItem = false;
+    }
+
+    double Snap(double value, double interval)
+    {
+        return Math.Round(value / interval, MidpointRounding.AwayFromZero) * interval;
     }
 }

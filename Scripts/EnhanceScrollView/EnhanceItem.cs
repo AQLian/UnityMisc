@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class EnhanceItem : MonoBehaviour
 {
@@ -27,10 +28,12 @@ public class EnhanceItem : MonoBehaviour
         set { dCurveCenterOffset = value; }
     }
     private Transform mTrs;
+    public Action onClickAction;
 
     void Awake()
     {
         mTrs = this.transform;
+        onClickAction = OnClickEnhanceItem;
         OnAwake();
     }
 
@@ -65,27 +68,28 @@ public class EnhanceItem : MonoBehaviour
         targetScale.x = targetScale.y = scaleValue;
         mTrs.localScale = targetScale;
     }
+    protected virtual void SetItemDepth(float depthCurveValue, int depthFactor, float itemCount)
+    {
+        var newDepth = (int)(depthCurveValue * itemCount);
+        transform.SetSiblingIndex(newDepth);
+    }
 
+    /// <summary>
+    /// default action, select this item
+    /// </summary>
     protected virtual void OnClickEnhanceItem()
     {
         EnhanceScrollView.GetInstance.SetHorizontalTargetItemIndex(this);
     }
 
-    protected virtual void OnStart()
+    protected virtual void OnStart(){}
+
+    protected virtual void OnAwake(){}
+
+    internal void SetSelectState(bool isCenter)
     {
+        OnSelectStateChange(isCenter);
     }
 
-    protected virtual void OnAwake()
-    {
-    }
-
-    protected virtual void SetItemDepth(float depthCurveValue, int depthFactor, float itemCount)
-    {
-    }
-
-    // Set the item center state
-    public virtual void SetSelectState(bool isCenter)
-    {
-        
-    }
+    protected virtual void OnSelectStateChange(bool isCenter){}
 }
