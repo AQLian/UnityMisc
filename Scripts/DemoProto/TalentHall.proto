@@ -1,0 +1,26 @@
+
+message TalentSkillItem {
+    // 技能id
+    required int32 id = 1;
+    // 技能名字
+    required string name = 2; 
+    // 技能展示大图资源
+    optional string model = 3;
+    
+    // 技能详情 故事背景描述
+    optional string skillBgDesc;
+    // 技能详情 技能描述
+    optional string skillDesc;
+    // 技能详情 技能描述介绍图
+    optional string skillIntroImg;
+    
+    // 技能关联的活动名字
+    optional string linkActName;
+    // 技能关联的活动跳转链接
+    optional string linkActUrl;
+
+    // 技能获取来源描述
+    otional  string skillGetSourceDesc;
+    // 技能获取渠道描述
+    optional string skillGetWayDesc;
+}
