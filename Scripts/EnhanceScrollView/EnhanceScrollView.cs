@@ -81,11 +81,7 @@ public class EnhanceScrollView : MonoBehaviour, IDragArenaEventListerner
         }
 
         // set the center item with startCenterIndex
-        if (startCenterIndex < 0 || startCenterIndex >= count)
-        {
-            Debug.LogError("## startCenterIndex < 0 || startCenterIndex >= listEnhanceItems.Count  out of index ##");
-            startCenterIndex = mCenterIndex;
-        }
+        startCenterIndex = mCenterIndex;
 
         // restrict view size
         if (maskArena)
@@ -279,16 +275,15 @@ public class EnhanceScrollView : MonoBehaviour, IDragArenaEventListerner
         originHorizontalValue = curHorizontalValue;
         preCenterItem = curCenterItem;
         var closest = listEnhanceItems[closestIndex];
-        // just test , please change
-        if(eventData.delta.x > 0)
+        if (eventData.delta.x > 0)
         {
             closest = listEnhanceItems[closestIndex - 1 < 0 ? listEnhanceItems.Count - 1 : closestIndex - 1];
             curCenterItem = closest;
-            LerpTweenToTarget(originHorizontalValue, (float)Snap(originHorizontalValue, dFactor)+dFactor, true);
+            LerpTweenToTarget(originHorizontalValue, (float)Snap(originHorizontalValue, dFactor) + dFactor, true);
         }
         else if (eventData.delta.x < 0)
         {
-            closest = listEnhanceItems[closestIndex + 1 > listEnhanceItems.Count - 1 ?  0 : closestIndex + 1];
+            closest = listEnhanceItems[closestIndex + 1 > listEnhanceItems.Count - 1 ? 0 : closestIndex + 1];
             curCenterItem = closest;
             LerpTweenToTarget(originHorizontalValue, (float)Snap(originHorizontalValue, dFactor) - dFactor, true);
         }
@@ -303,6 +298,25 @@ public class EnhanceScrollView : MonoBehaviour, IDragArenaEventListerner
 
     double Snap(double value, double interval)
     {
-        return Math.Round(value / interval, MidpointRounding.AwayFromZero) * interval;
+        if (listEnhanceItems.Count % 2 == 0)
+        {
+            var mul = value / interval;
+            return Math.Round(mul, MidpointRounding.AwayFromZero) * interval;
+        }
+        else
+        {
+            interval = interval * .5f;
+            var mul = value / interval;
+            var r = Math.Round(mul, MidpointRounding.AwayFromZero);
+            if (r > mul && Mathf.Floor((float)r) % 2 == 0)
+            {
+                r = r - 1;
+            }
+            else if ( r < mul && Mathf.Floor((float)r) % 2 == 0)
+            {
+                r = r + 1;
+            }
+            return r * interval;
+        }
     }
 }
