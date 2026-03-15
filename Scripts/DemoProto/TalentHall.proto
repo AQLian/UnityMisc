@@ -8,19 +8,19 @@ message TalentSkillItem {
     optional string model = 3;
     
     // 技能详情 故事背景描述
-    optional string skillBgDesc;
+    optional string skillBgDesc = 4;
     // 技能详情 技能描述
-    optional string skillDesc;
+    optional string skillDesc = 5;
     // 技能详情 技能描述介绍图
-    optional string skillIntroImg;
+    optional string skillIntroImg = 6;
     
     // 技能关联的活动名字
-    optional string linkActName;
+    optional string linkActName = 7;
     // 技能关联的活动跳转链接
-    optional string linkActUrl;
+    optional string linkActUrl = 8;
 
     // 技能激活来源描述
-    otional  string skillActiveSourceDesc;
+    optional  string skillActiveSourceDesc = 9;
     // 技能获取渠道描述
-    optional string skillGetWayDesc;
+    optional string skillGetWayDesc = 10;
 }
