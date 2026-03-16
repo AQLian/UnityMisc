@@ -51,7 +51,7 @@ namespace Scripts
         }
 
         // convert PointerEventData.delta -> localSpace delta
-        // this will ondrag event control RectTranform position(.anchoredPosition+=delta)
+        // this will make like ondrag event control RectTranform position(.anchoredPosition+=delta)
         // exact match local space coordinate
         public static Vector2 ConvertScreenDeltaToLocalDelta(PointerEventData eventData, RectTransform rect)
         {
