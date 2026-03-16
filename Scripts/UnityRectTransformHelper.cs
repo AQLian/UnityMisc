@@ -24,4 +24,36 @@ namespace Scripts
             restrictRect.localPosition = relate;
         }
     }
+
+    public static class UGUIHelper
+    {
+        public static Vector2 ConvertScreenDeltaToLocalDelta(PointerEventData eventData, RectTransform rect, out bool success)
+        {
+            if (eventData == null || rect == null)
+            {
+                success = false;
+                return Vector2.zero;
+            }
+            Vector2 currentScreenPos = eventData.position;
+            Vector2 previousScreenPos = currentScreenPos - eventData.delta;
+            bool convertedCurrent = RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rect,
+                currentScreenPos,
+                eventData.pressEventCamera, // Auto-null for Overlay canvases
+                out Vector2 currentLocalPos);
+            bool convertedPrevious = RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rect,
+                previousScreenPos,
+                eventData.pressEventCamera,
+                out Vector2 previousLocalPos);
+            success = convertedCurrent && convertedPrevious;
+            return success ? currentLocalPos - previousLocalPos : Vector2.zero;
+        }
+
+        // convert PointerEventData.delta -> localSpace delta
+        public static Vector2 ConvertScreenDeltaToLocalDelta(PointerEventData eventData, RectTransform rect)
+        {
+            return ConvertScreenDeltaToLocalDelta(eventData, rect, out _);
+        }
+    }
 }
