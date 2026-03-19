@@ -51,8 +51,8 @@ public class ReportWithElapsedTime : NormalReport
     protected override void OnStopRecord()
     {
         stopWatch.Stop();
-        var time = stopWatch.ElapsedMilliseconds / 1000f;
-        AddReserveField(time.ToString());
+        var seconds = stopWatch.Elapsed.TotalSeconds;
+        AddReserveField(seconds.ToString());
         base.OnStopRecord();
     }
 }
