@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 public static class DOBezierExtensions
 {
@@ -36,34 +37,105 @@ public static class DOBezierExtensions
 }
 
 
+public static class DoTweenUtil
+{
+    public static void NormalCompletedListener(Action<bool> stateNotify, params Tweener[] ts)
+    {
+        var normalCounter = ts.Length;
+        var len = ts.Length;
+        foreach (var t in ts)
+        {
+            var existingComplete = t.onComplete;
+            t.OnComplete(existingComplete += () =>
+            {
+                normalCounter--;
+            });
+            var existingKill = t.onKill;
+            t.OnKill(existingKill += () =>
+            {
+                len--;
+                if (len == 0)
+                {
+                    stateNotify(normalCounter == 0);
+                }
+            });
+        }
+    }
+}
+
 /// <summary>
 /// 随机的钻石收集效果
 /// </summary>
-public class RandomDiamondEffect
+public class DiamondCollectEffect : IDisposable
 {
-    public static void ShowEffect(GameObject prefab, Transform parent, Vector3 startPos, Vector3 endPos, int siblingIndex = -1, int num = 20, Action onFinish = null)
+    private ObjectPool<GameObject> m_itemPool;
+
+    public DiamondCollectEffect(GameObject prefab)
+    {
+        m_itemPool = new ObjectPool<GameObject>(
+        createFunc: ()=> GameObject.Instantiate(prefab),
+        actionOnGet: g => g.SetActive(true),
+        actionOnRelease: g => g.SetActive(false),
+        collectionCheck: false,
+        defaultCapacity: 20,
+        actionOnDestroy: g =>
+        {
+            if (Application.isEditor)
+            {
+                GameObject.DestroyImmediate(g);
+            }
+            else
+            {
+                GameObject.Destroy(g);
+            }
+        });
+    }
+
+    public void Dispose()
+    {
+        m_itemPool?.Dispose();
+    }
+
+    public void ShowEffect(
+        Transform parent, 
+        Vector3 startPos, 
+        Vector3 endPos, 
+        int siblingIndex = -1, 
+        int num = 20, 
+        Action onItemFinish=null,
+        Action onAllFinish = null)
     {
         var seq = DOTween.Sequence();
         var val = 300;
         for(var i = 0; i < num; ++i)
         {
-            var item = GameObject.Instantiate(prefab);
+            var item = m_itemPool.Get();
             item.transform.SetParent(parent, false);
-            if(siblingIndex!=-1)
+            if (siblingIndex!=-1)
                 item.transform.SetSiblingIndex(siblingIndex);
             var randomTime = UnityEngine.Random.Range(0.4f, 0.6f);
             item.transform.position = startPos;
             var rPos = startPos + UnityEngine.Random.insideUnitSphere * 200;
-            seq.Insert(0, item.transform.DOMove(rPos, randomTime)).SetEase(Ease.OutSine);
+            var move = item.transform.DOMove(rPos, randomTime);
+            seq.Insert(0, move).SetEase(Ease.OutSine);
             var pos = startPos;
             var ctrolPos = new Vector3(pos.x + val, pos.y - val, pos.z);
-            seq.Insert(randomTime, item.transform.DOBezier(startPos, ctrolPos, endPos, UnityEngine.Random.Range(.8f, 1.2f), callback: () => 
+            Action claimRes= () =>
             {
-                GameObject.Destroy(item);
-                onFinish?.Invoke();
-            }));
+                m_itemPool.Release(item);
+                onItemFinish?.Invoke();
+            };
+            var bezier = item.transform.DOBezier(startPos, ctrolPos, endPos, UnityEngine.Random.Range(.8f, 1.2f), callback: claimRes);
+            seq.Insert(randomTime, bezier);
+            //完全有可能非正常Complete，需要处理异常
+            DoTweenUtil.NormalCompletedListener(normal => {
+                if (!normal)
+                {
+                    claimRes();
+                }
+            }, move, bezier);
         }
         seq.SetUpdate(true);
-        seq.AppendCallback(() => { onFinish?.Invoke(); });
+        seq.AppendCallback(() => { onAllFinish?.Invoke(); });
     }
 }
