@@ -37,7 +37,7 @@ public class NtpUtcNowSynchronizer
         try
         {
             var ret = await AsyncNtpClient.GetFirst(m_servers, TimeoutMilliseconds);
-            LastSyncUtcNow = ret.Item1.UtcTime.AddMilliseconds(ret.Item1.Rtt.Milliseconds);
+            LastSyncUtcNow = ret.Item1.UtcTime.AddMilliseconds(ret.Item1.Rtt.TotalMilliseconds);
             Synchornized = true;
             localWatch = localWatch ?? new();
             localWatch.Restart();
