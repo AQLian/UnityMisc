@@ -18,8 +18,6 @@ namespace Scripts.NtpUtcNowSync
                 {
                     // 读取响应头的 Date 字段
                     string dateStr = req.GetResponseHeader("Date");
-                    var content = req.responseCode;
-                    Debug.Log($"code: {content}");
                     if (DateTime.TryParseExact(dateStr, "r", null, System.Globalization.DateTimeStyles.None, out DateTime serverUtc))
                     {
                         Debug.Log($"获取到权威UTC时间：{serverUtc:o}");
