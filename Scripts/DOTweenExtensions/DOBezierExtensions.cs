@@ -7,14 +7,21 @@ using UnityEngine.Pool;
 
 public static class DOBezierExtensions
 {
-    public static Tweener DOBezier(this Transform transform, Vector3 startPos, Vector3 controlPos, Vector3 endPos, float time, Ease ease = Ease.InQuad, Action callback = null)
+    public static Tweener DOBezier(this Transform transform,
+    Vector3 startPos, 
+    Vector3 controlPos, 
+    Vector3 endPos, 
+    float time, 
+    Ease ease = Ease.InQuad, 
+    Action callback = null,
+    int count = 20)
     {
         if (!transform)
         {
             return null;
         }
         DOTween.Kill(transform);
-        var path = BezierPath(startPos, controlPos, endPos);
+        var path = BezierPath(startPos, controlPos, endPos, count);
         return transform.DOPath(path, time).OnComplete(() => 
         {
             callback?.Invoke();
@@ -36,9 +43,16 @@ public static class DOBezierExtensions
     => (1 - t) * (1 - t) * startPos + 2 * t * (1 - t) * controlPos + t * t * endPos;
 }
 
-
+/// <summary>
+/// 注意需要autokill启用否则也用不了
+/// </summary>
 public static class DoTweenUtil
 {
+    /// <summary>
+    /// 检查一组tweener是否正常完成，正常完成是指没有被kill掉，如果被kill掉了说明是非正常完成，可能是被外部强行kill掉了，也可能是因为对象被销毁了导致的kill掉了
+    /// </summary>
+    /// <param name="stateNotify"></param>
+    /// <param name="ts"></param> <summary>
     public static void NormalCompletedListener(Action<bool> stateNotify, params Tweener[] ts)
     {
         var normalCounter = ts.Length;
@@ -64,11 +78,13 @@ public static class DoTweenUtil
 }
 
 /// <summary>
-/// 随机的钻石收集效果
+/// 随机的收集效果，可以创建一个实例后面反复使用，内部有池子会服用创建后的移动对象
 /// </summary>
 public class DiamondCollectEffect : IDisposable
 {
     private ObjectPool<GameObject> m_itemPool;
+
+    public Vector2 ControlPointOffset = new Vector2(300, -300);
 
     public DiamondCollectEffect(GameObject prefab)
     {
@@ -94,6 +110,7 @@ public class DiamondCollectEffect : IDisposable
     public void Dispose()
     {
         m_itemPool?.Dispose();
+        m_itemPool=null;
     }
 
     public void ShowEffect(
@@ -106,7 +123,6 @@ public class DiamondCollectEffect : IDisposable
         Action onAllFinish = null)
     {
         var seq = DOTween.Sequence();
-        var val = 300;
         for(var i = 0; i < num; ++i)
         {
             var item = m_itemPool.Get();
@@ -119,7 +135,7 @@ public class DiamondCollectEffect : IDisposable
             var move = item.transform.DOMove(rPos, randomTime);
             seq.Insert(0, move).SetEase(Ease.OutSine);
             var pos = startPos;
-            var ctrolPos = new Vector3(pos.x + val, pos.y - val, pos.z);
+            var ctrolPos = new Vector3(pos.x + ControlPointOffset.x, pos.y + ControlPointOffset.y, pos.z);
             Action claimRes= () =>
             {
                 m_itemPool.Release(item);
