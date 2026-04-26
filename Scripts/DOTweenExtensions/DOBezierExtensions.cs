@@ -75,6 +75,27 @@ public static class DoTweenUtil
             });
         }
     }
+
+    public static void DOPunchScale(Transform transform, float punch = .3f, float duration = .5f, float elasticity=.5f)
+    {
+        transform.DOPunchScale(
+            punch: new Vector3(punch, punch, 0), // XY 方向最大放大 30%
+            duration: duration,
+            vibrato: 1,                        // 仅一次来回
+            elasticity: elasticity             // 回弹力度，0=无弹性，1=完全弹性
+        ).SetEase(Ease.OutQuad);
+    }
+
+    public static void DoBreathEffect(Transform transform, float scaleTarget = 1.2f, float duration = .5f)
+    {
+        transform.localScale = Vector3.one;
+        transform.DOScale(
+            endValue: new Vector3(scaleTarget, scaleTarget, 1f),
+            duration: duration
+        )
+        .SetLoops(-1, LoopType.Yoyo)   // 无限循环，来回模式
+        .SetEase(Ease.InOutSine);      // 慢进慢出，更自然
+    }
 }
 
 /// <summary>
