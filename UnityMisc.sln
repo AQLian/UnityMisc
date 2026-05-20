@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{C4AD9936-F0DF-1090-6077-3D4A6324E662}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "csharp_udp", "csharp_udp", "{4B940841-D969-2BBF-42EB-966EC1977FC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReliableUdp", "Scripts\csharp_udp\ReliableUdp.csproj", "{DE63BFBE-D311-44FA-17A2-E06DC417D996}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tokio_style_time_csharp", "tokio_style_time_csharp", "{6121AFF5-C505-6147-E5C5-FB606F215447}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimerWheel", "Scripts\tokio_style_time_csharp\TimerWheel.csproj", "{8C24CEF9-C102-90FF-FFFB-789B50842B51}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE63BFBE-D311-44FA-17A2-E06DC417D996}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE63BFBE-D311-44FA-17A2-E06DC417D996}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE63BFBE-D311-44FA-17A2-E06DC417D996}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE63BFBE-D311-44FA-17A2-E06DC417D996}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C24CEF9-C102-90FF-FFFB-789B50842B51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C24CEF9-C102-90FF-FFFB-789B50842B51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C24CEF9-C102-90FF-FFFB-789B50842B51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C24CEF9-C102-90FF-FFFB-789B50842B51}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4B940841-D969-2BBF-42EB-966EC1977FC8} = {C4AD9936-F0DF-1090-6077-3D4A6324E662}
+		{DE63BFBE-D311-44FA-17A2-E06DC417D996} = {4B940841-D969-2BBF-42EB-966EC1977FC8}
+		{6121AFF5-C505-6147-E5C5-FB606F215447} = {C4AD9936-F0DF-1090-6077-3D4A6324E662}
+		{8C24CEF9-C102-90FF-FFFB-789B50842B51} = {6121AFF5-C505-6147-E5C5-FB606F215447}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0EF0E072-749D-4917-AC3D-5F75DD9419BF}
+	EndGlobalSection
+EndGlobal

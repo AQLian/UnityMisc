@@ -1,0 +1,9 @@
+Yes, install fresh with the same tools:
+winget install ffmpeg                          # winget
+choco install ffmpeg                           # choco
+scoop install ffmpeg                           # scoop (scoop bucket add extras first if not added)
+All three handle adding ffmpeg to PATH automatically.
+
+- winget — built-in on Windows 10 1809+ / Windows 11 (no extra install needed)
+- choco — needs one-time PowerShell install: Set-ExecutionPolicy Bypass -Scope Process; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+- scoop — needs one-time PowerShell install: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm get.scoop.sh | iex
